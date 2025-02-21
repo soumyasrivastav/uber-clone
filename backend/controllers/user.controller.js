@@ -1,16 +1,16 @@
 const userModel = require('../models/user.model');
-const userService = require('../services/user.service');
-const { validationResult } = require('express-validator'); 
+const { validationResult } = require('express-validator');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 module.exports.registerUser = async (req, res, next) => {
-    console.log("Full Request Body:", JSON.stringify(req.body, null, 2));  // Debugging
+    console.log(" Full Request Body:", req.body);  // Debugging Line
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    // ✅ Ensure `fullname` exists
     const fullname = req.body.fullname || {};
     const firstname = fullname.firstname || null;
     const lastname = fullname.lastname || null;
@@ -22,19 +22,56 @@ module.exports.registerUser = async (req, res, next) => {
 
     try {
         const hashedPassword = await userModel.hashPassword(password);
-        const user = await userService.createUser({
-            firstname,
-            lastname,
+        const user = await userModel.create({
+            fullname: { firstname, lastname },
             email,
             password: hashedPassword
         });
 
-        const token = user.generateAuthToken();
+        const token = jwt.sign({ _id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
         return res.status(201).json({ token, user });
 
     } catch (error) {
-        console.error("Error creating user:", error);
+        console.error(" Error creating user:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+//  Add loginUser function
+module.exports.loginUser = async (req, res, next) => {
+    console.log("Login Request Body:", req.body);  // Debugging
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+        //  Find user by email
+        const user = await userModel.findOne({ email }).select('+password');
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Compare password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // ✅Generate JWT Token
+        const token = jwt.sign({ _id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        return res.status(200).json({ token, user });
+
+    } catch (error) {
+        console.error(" Error during login:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
 
