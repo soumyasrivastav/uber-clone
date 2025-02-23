@@ -79,3 +79,71 @@ Creates a new user account with the provided details.
 - All timestamps are returned in ISO 8601 format
 - The API uses JWT tokens for authentication in subsequent requests
 - Password must contain at least 8 characters, including numbers and letters
+
+## User Login
+
+This section provides details about the login function and the JWT token used for authentication.
+
+### Endpoint
+
+```
+POST /users/login
+```
+
+### Description
+
+Authenticates a user and returns a JWT token for subsequent requests.
+
+### Request Body
+
+| Field      | Type     | Required | Description                    |
+|------------|----------|----------|--------------------------------|
+| email      | string   | Yes      | User's email address          |
+| password   | string   | Yes      | User's password               |
+
+### Response Status Codes
+
+| Status Code | Description                                |
+|-------------|--------------------------------------------|
+| 200         | User successfully authenticated            |
+| 400         | Bad Request - Invalid input parameters     |
+| 401         | Unauthorized - Invalid email or password   |
+| 500         | Internal Server Error                      |
+
+### Example Request
+
+```json
+{
+  "email": "john@example.com",
+  "password": "securepassword123"
+}
+```
+
+### Example Success Response
+
+```json
+{
+  "status": "success",
+  "message": "User authenticated successfully",
+  "data": {
+    "token": "jwt_token"
+  }
+}
+```
+
+### Example Error Response
+
+```json
+{
+  "status": "error",
+  "message": "User authentication failed",
+  "errors": {
+    "email": "Invalid email or password"
+  }
+}
+```
+
+### Notes
+
+- The JWT token must be included in the Authorization header for all subsequent requests
+- The token expires after 24 hours

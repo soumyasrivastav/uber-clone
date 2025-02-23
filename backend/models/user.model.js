@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,  // Fix typo: "require" → "required"
+        required: true, 
         unique: true,
         minlength: [5, 'Email must be at least 5 characters'],
     },
@@ -30,22 +30,23 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// 🔹 Generate Auth Token
-userSchema.methods.generateAuthToken = function () { // Fix typo: "generateteAuthToken" → "generateAuthToken"
-    return jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
+//Generate Auth Token
+userSchema.methods.generateAuthToken = function () { 
+    const tokn = jwt.sign({ _id: this.id }, process.env.JWT_SECRET, { expiresIN: '24h' });
+    return token;
 };
 
-// 🔹 Compare Password
+// Compare Password
 userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
-// 🔹 Hash Password
+// Hash Password
 userSchema.statics.hashPassword = async function (password) { // Fix typo: "hashpassword" → "hashPassword"
     return await bcrypt.hash(password, 10);
 };
 
-// 🔹 Create Model (Fixed userschema typo)
+// Create Model (Fixed userschema typo)
 const userModel = mongoose.model('user', userSchema);
 
 module.exports = userModel;
